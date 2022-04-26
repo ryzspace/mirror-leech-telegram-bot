@@ -1,5 +1,3 @@
-import os
-
 from os import path as ospath, getcwd, chdir
 from traceback import format_exc
 from textwrap import indent
@@ -121,7 +119,7 @@ def exechelp(update, context):
 • /exec <i>Run Commands In Exec</i>
 • /clearlocals <i>Cleared locals</i>
 '''
-    sendMessage(help_string, context.bot, update)
+    sendMessage(help_string, context.bot, update.message)
 
 
 EVAL_HANDLER = CommandHandler(('eval'), evaluate, filters=CustomFilters.owner_filter, run_async=True)

@@ -2,7 +2,8 @@
 # (c) YashDK [yash-dk@github]
 # Redesigned By - @bipuldey19 (https://github.com/SlamDevs/slam-mirrorbot/commit/1e572f4fa3625ecceb953ce6d3e7cf7334a4d542#diff-c3d91f56f4c5d8b5af3d856d15a76bd5f00aa38d712691b91501734940761bdd)
 
-import logging
+from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig as log_Config
+
 
 from time import sleep
 from qbittorrentapi import NotFound404Error, Client as qbClient
@@ -12,11 +13,11 @@ from web import nodes
 
 app = Flask(__name__)
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
-                    level=logging.INFO)
+log_Config(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    handlers=[FileHandler('log.txt'), StreamHandler()],
+                    level=INFO)
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = getLogger(__name__)
 
 page = """
 <html lang="en">
@@ -675,14 +676,14 @@ def re_verfiy(paused, resumed, client, hash_id):
             client.torrents_file_priority(torrent_hash=hash_id, file_ids=paused, priority=0)
         except NotFound404Error:
             raise NotFound404Error
-        except:
-            LOGGER.error("Errored in reverification paused")
+        except Exception as e:
+            LOGGER.error(f"{e} Errored in reverification paused")
         try:
             client.torrents_file_priority(torrent_hash=hash_id, file_ids=resumed, priority=1)
         except NotFound404Error:
             raise NotFound404Error
-        except:
-            LOGGER.error("Errored in reverification resumed")
+        except Exception as e:
+            LOGGER.error(f"{e} Errored in reverification resumed")
         k += 1
         if k > 5:
             return False
@@ -738,14 +739,14 @@ def set_priority(hash_id):
         client.torrents_file_priority(torrent_hash=hash_id, file_ids=pause, priority=0)
     except NotFound404Error:
         raise NotFound404Error
-    except:
-        LOGGER.error("Errored in paused")
+    except Exception as e:
+        LOGGER.error(f"{e} Errored in paused")
     try:
         client.torrents_file_priority(torrent_hash=hash_id, file_ids=resume, priority=1)
     except NotFound404Error:
         raise NotFound404Error
-    except:
-        LOGGER.error("Errored in resumed")
+    except Exception as e:
+        LOGGER.error(f"{e} Errored in resumed")
     sleep(2)
     if not re_verfiy(pause, resume, client, hash_id):
         LOGGER.error("Verification Failed")

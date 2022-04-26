@@ -22,7 +22,6 @@ class _BotCommands:
         self.StatsCommand = f'stats{CMD_INDEX}'
         self.HelpCommand = f'help{CMD_INDEX}'
         self.LogCommand = f'log{CMD_INDEX}'
-        self.SpeedCommand = f'speedtest{CMD_INDEX}'
         self.CloneCommand = f'clone{CMD_INDEX}'
         self.CountCommand = f'count{CMD_INDEX}'
         self.WatchCommand = f'watch{CMD_INDEX}'
@@ -47,6 +46,6 @@ class _BotCommands:
         self.RssGetCommand = f'rssget{CMD_INDEX}'
         self.RssSubCommand = f'rsssub{CMD_INDEX}'
         self.RssUnSubCommand = f'rssunsub{CMD_INDEX}'
-        self.RssUnSubAllCommand = f'rssunsuball{CMD_INDEX}'
+        self.RssSettingsCommand = f'rssset{CMD_INDEX}'
 
 BotCommands = _BotCommands()
