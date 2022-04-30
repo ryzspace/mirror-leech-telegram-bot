@@ -6,6 +6,7 @@ from os import makedirs, path as ospath, listdir
 from requests.utils import quote as rquote
 from io import FileIO
 from re import search as re_search
+from urllib.parse import parse_qs, urlparse
 from random import randrange
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
@@ -95,11 +96,14 @@ class GoogleDriveHelper:
 
     @staticmethod
     def __getIdFromUrl(link: str):
-        regex = r"https:\/\/drive\.google\.com\/(?:open(.*?)id\=|drive(.*?)\/folders\/|file(.*?)?\/d\/|folderview(.*?)id\=|uc(.*?)id\=)([-\w]+)"
-        res = re_search(regex,link)
-        if res is None:
-            raise IndexError("G-Drive ID not found.")
-        return res.group(6)
+        if "folders" in link or "file" in link:
+            regex = r"https:\/\/drive\.google\.com\/(?:drive(.*?)\/folders\/|file(.*?)?\/d\/)([-\w]+)"
+            res = re_search(regex,link)
+            if res is None:
+                raise IndexError("G-Drive ID not found.")
+            return res.group(3)
+        parsed = urlparse(link)
+        return parse_qs(parsed.query)['id'][0]
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, DEBUG))
@@ -452,14 +456,16 @@ class GoogleDriveHelper:
             return parent_id
         new_id = None
         for item in list_dirs:
-            if item.endswith(tuple(EXTENTION_FILTER)):
-                continue
+            if self.is_cancelled:
+                break
             current_file_name = ospath.join(input_directory, item)
             if ospath.isdir(current_file_name):
                 current_dir_id = self.__create_directory(item, parent_id)
                 new_id = self.__upload_dir(current_file_name, current_dir_id)
                 self.__total_folders += 1
             else:
+                if item.lower().endswith(tuple(EXTENTION_FILTER)):
+                    continue
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
                 # current_file_name will have the full path
@@ -839,6 +845,8 @@ class GoogleDriveHelper:
             return
         result = sorted(result, key=lambda k: k['name'])
         for item in result:
+            if self.is_cancelled:
+                break
             file_id = item['id']
             filename = item['name']
             shortcut_details = item.get('shortcutDetails')
@@ -850,6 +858,8 @@ class GoogleDriveHelper:
             if mime_type == self.__G_DRIVE_DIR_MIME_TYPE:
                 self.__download_folder(file_id, path, filename)
             elif not ospath.isfile(path + filename):
+                if filename.lower().endswith(tuple(EXTENTION_FILTER)):
+                    continue
                 self.__download_file(file_id, path, filename, mime_type)
             if self.is_cancelled:
                 break
